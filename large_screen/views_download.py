@@ -127,6 +127,7 @@ def hw_fault_now_solved(request):
 
 
 def num_kpi(request):
+	"""统计KPI告警数"""
 	db = psycopg2.connect(database='postgres', user='postgres', password='postgres', host='192.168.61.20', port='5433')
 	cursor = db.cursor()
 	sql = "SELECT enb_id FROM kpi_ty.pd_to_boco WHERE alarm_pd='TRUE' group by enb_id"
@@ -137,6 +138,7 @@ def num_kpi(request):
 
 
 def num_volume(request):
+	"""统计扩容告警数"""
 	# sql = 'SELECT kr_count FROM kpi_ty.kr_lte_pivot'
 	db = psycopg2.connect(database='postgres', user='postgres', password='postgres', host='192.168.61.20', port='5433')
 	cursor = db.cursor()
@@ -151,6 +153,7 @@ def num_volume(request):
 
 
 def num_hardware(request):
+	"""统计硬件故障数"""
 	# sql = 'SELECT kr_count FROM kpi_ty.kr_lte_pivot'
 	db = psycopg2.connect(database='postgres', user='postgres', password='postgres', host='192.168.61.20', port='5433')
 	cursor = db.cursor()
@@ -170,6 +173,7 @@ def num_kqi(request):
 
 
 def firstkpi(request):
+	"""下载KPI告警信息"""
 	db = psycopg2.connect(database='postgres', user='postgres', password='postgres', host='192.168.61.20', port='5433')
 	cursor = db.cursor()
 
@@ -205,6 +209,7 @@ def firstkpi(request):
 
 
 def firstvolume(request):
+	"""下载扩容告警信息"""
 	db = psycopg2.connect(database='postgres', user='postgres', password='postgres', host='192.168.61.20', port='5433')
 	cursor = db.cursor()
 
@@ -295,6 +300,7 @@ def firstvolume(request):
 
 
 def firsthardware(request):
+	"""下载硬件故障信息"""
 	db = psycopg2.connect(database='postgres', user='postgres', password='postgres', host='192.168.61.20', port='5433')
 	cursor = db.cursor()
 

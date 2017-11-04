@@ -15,6 +15,7 @@ import xlwt
 import csv
 
 def timeall():
+	"""生成最近3天的一个时间序列，每段时间间隔2小时"""
 	now = datetime.datetime.now()
 	td = datetime.timedelta(days=3)
 	delt = datetime.timedelta(hours=2)
@@ -28,6 +29,7 @@ def timeall():
 	return time_all
 
 def sevendates():
+	"""生成最近7天的时间序列"""
 	lastFriday = datetime.date.today()
 	oneday = datetime.timedelta(days=1)
 	sevendays = datetime.timedelta(days=7)
@@ -40,7 +42,7 @@ def sevendates():
 	return s7cycles
 
 
-
+# 导入postgres数据库
 db = psycopg2.connect(database='postgres', user='postgres', password='postgres', host='192.168.61.20', port='5433')
 cursor = db.cursor()
 # res tuple组成的list
@@ -76,6 +78,7 @@ def dubiao_all_rate(request):
 	"""整体对标领先率"""
 	db = psycopg2.connect(database='postgres', user='postgres', password='postgres', host='192.168.61.20', port='5433')
 	cursor = db.cursor()
+	# 统计最近一个时间的对标情况
 	sql = "SELECT duibiao, count(duibiao) FROM ui.duibiao_490 WHERE sdate in (SELECT max(sdate) FROM ui.duibiao_490) group by duibiao"
 	cursor.execute(sql)
 	res = cursor.fetchall()
@@ -115,6 +118,7 @@ def gprs_dl_all(request):
 		oneday_before = (date1 - td).strftime("%Y-%m-%d")
 		busy_time = oneday_before + ' 20:00:00'
 
+	# 获取忙时 busy_time的流量
 	sql = "SELECT start_time, gprs_dl FROM kpi_ty.kpi_ty_lte where start_time='%s'" % (busy_time)
 	print(sql)
 	cursor.execute(sql)
@@ -210,7 +214,7 @@ def seven_rate(request):
 
 
 def six_cycles(request):
-	# 统计重点场景的达标率
+	"""统计重点场景的达标率"""
 	db = psycopg2.connect(database='postgres', user='postgres', password='postgres', host='192.168.61.20', port='5433')
 	cursor = db.cursor()
 	date_list = []
@@ -306,6 +310,7 @@ def six_cycles(request):
 
 
 def name_of_scene(request):
+	"""统计场景名称以及对应的位置信息和对标率, 并按照达标与否进行分类"""
 	db = psycopg2.connect(database='postgres', user='postgres', password='postgres', host='192.168.61.20', port='5433')
 	cursor = db.cursor()
 
@@ -351,15 +356,13 @@ def name_of_scene(request):
 	name_dict['better'] = better
 	name_dict['worse'] = worse
 	# print(dl)
-	cursor.close()
-	db.close()
-
-	# name_dict = {'dl':[{'id':'1','text':'xuhui','lon':'121.449', 'lat':'31.21425'}, {'id':'2','text':'hihai','lon':'121.42805', 'lat':'31.1958'}, {'id':'3','text':'ssshihai','lon':'121.46805', 'lat':'31.1758'}]}
+	# cursor.close()
+	# db.close()
 	return JsonResponse(name_dict)
 
 
 def important_4GKPI(request):
-	"""重点场景4G-KPI接通率和掉话率"""
+	"""重点场景4G-KPI接通率和掉话率，时间序列 2小时*36 """
 	db = psycopg2.connect(database='postgres', user='postgres', password='postgres', host='192.168.61.20', port='5433')
 	cursor = db.cursor()
 
@@ -446,6 +449,7 @@ def problem_sg(request):
 	kpi_alarm = []
 	volume_alarm = []
 
+	# KPI告警
 	sqlkpi = "SELECT enb_id FROM kpi_ty.pd_to_boco where start_time in (select max(start_time) from kpi_ty.pd_to_boco) group by enb_id"
 	cursor.execute(sqlkpi)
 	reskpi = cursor.fetchall()
@@ -455,6 +459,7 @@ def problem_sg(request):
 			if kpienbid in enbid:
 				kpi.append(kpienbid)
 
+	# 扩容告警
 	sqlvol = "SELECT enb_id FROM kpi_ty.kr_lte_pivot where sdate in (select max(sdate) from kpi_ty.kr_lte_pivot) group by enb_id"
 	cursor.execute(sqlvol)
 	resvol = cursor.fetchall()
@@ -548,6 +553,7 @@ def cell_ok(request):
 
 
 def num_busy(request):
+	"""统计主控小区的忙时流量"""
 	# index2 左下表格 主控小区
 	name_scene = name_special_scene
 	# name_scene = '虹桥商务区核心区'
@@ -643,6 +649,7 @@ def special_4GKPI(request):
 
 
 def sp_gj_info(request):
+	"""统计具体场景的告警信息"""
 	# index2 右中表格 告警详单
 	name_scene = name_special_scene
 	# name_scene = '外环高架'
@@ -700,6 +707,7 @@ def sp_gj_info(request):
 
 
 def download_sp_gj(request):
+	"""具体场景的告警信息的下载接口"""
 	# index2 右中表格 告警详单 - 导出详单
 	name_scene = name_special_scene
 	# name_scene = '外环高架'
@@ -852,6 +860,7 @@ def kpi_enbid(request):
 
 
 def st_from(request):
+	"""返回一个默认周期，前10天到前2天"""
 	now = datetime.datetime.now()
 	td2 = datetime.timedelta(days=2)
 	td10= datetime.timedelta(days=10)
@@ -866,10 +875,12 @@ def st_from(request):
 
 
 def gj_monitor_mid(request):
+	"""统计告警工单的具体信息"""
 	# index3 告警工单监控右中表格 默认前10天到前2天
 	db = psycopg2.connect(database='postgres', user='postgres', password='postgres', host='192.168.61.20', port='5433')
 	cursor = db.cursor()
 
+	# 时间序列依据前端的返回值来改写
 	date_from = request.GET['starttime']
 	date_to = request.GET['endtime']
 
@@ -887,6 +898,7 @@ def gj_monitor_mid(request):
 	date3_from = date_from
 	date3_to = date_to
 
+	# 搜索具体信息写入告警工单
 	row_name = {'east': '东区', 'west': '西区', 'south': '南区', 'north': '北区', 'special': '专项', 'total': '总计'}
 
 	kpi = {'east': 0, 'west': 0, 'south': 0, 'north': 0, 'special': 0, 'total': 0}
@@ -972,6 +984,7 @@ def gj_monitor_mid(request):
 
 
 def download_gj_monitor(request):
+	"""提供告警工单详情的下载接口"""
 	# index3 告警工单监控右中表格下载
 	db = psycopg2.connect(database='postgres', user='postgres', password='postgres', host='192.168.61.20', port='5433')
 	cursor = db.cursor()
@@ -1127,6 +1140,7 @@ def download_gj_monitor(request):
 	return response
 
 def kpi_alarm_info(request):
+	"""根据前端返回的工单号寻找具体告警信息"""
 	db = psycopg2.connect(database='postgres', user='postgres', password='postgres', host='192.168.61.20', port='5433')
 	cursor = db.cursor()
 	global booc_id
@@ -1165,6 +1179,7 @@ def kpi_alarm_info(request):
 
 
 def download_kpi_alarm(request):
+	"""下载告警信息"""
 	db = psycopg2.connect(database='postgres', user='postgres', password='postgres', host='192.168.61.20', port='5433')
 	cursor = db.cursor()
 	# 创建excel
@@ -1216,6 +1231,7 @@ def download_kpi_alarm(request):
 
 
 def volume_enbid(request):
+	"""扩容告警基站信息，包括名称和位置"""
 	db = psycopg2.connect(database='postgres', user='postgres', password='postgres', host='192.168.61.20', port='5433')
 	cursor = db.cursor()
 	sql = "SELECT a.enb_id, a.z_name, b.longitude, b.latitude, b.enb FROM kpi_ty.kr_lte_pivot a left join ui.cell_scene_lte b on a.enb_id=b.enb where a.sdate in (select max(sdate) from kpi_ty.kr_lte_pivot)"
@@ -1236,6 +1252,7 @@ def volume_enbid(request):
 
 
 def datechoose(request):
+	"""返回一个默认选择日期"""
 	# 默认时间向前推一天
 	now = datetime.datetime.now()
 	td = datetime.timedelta(days=1)
@@ -1247,6 +1264,7 @@ def datechoose(request):
 	return JsonResponse(dc)
 
 def volume_alert_info(request):
+	"""容量预警监控信息"""
 	# index4 容量预警监控右上表格 默认时间向前推一天
 	db = psycopg2.connect(database='postgres', user='postgres', password='postgres', host='192.168.61.20', port='5433')
 	cursor = db.cursor()
@@ -1367,6 +1385,7 @@ def volume_alert_info(request):
 
 
 def download_volume_alert(request):
+	"""提供扩容信息下载接口"""
 	# index4 容量预警监控右上表格下载
 	db = psycopg2.connect(database='postgres', user='postgres', password='postgres', host='192.168.61.20', port='5433')
 	cursor = db.cursor()
@@ -1465,7 +1484,7 @@ def download_volume_alert(request):
 
 
 def prb_num_distribution(request):
-	# 选择日期上忙时对应的prb利用率的分布情况 - 小区数目
+	"""选择日期上忙时对应的prb利用率的分布情况 - 小区数目"""
 	db = psycopg2.connect(database='postgres', user='postgres', password='postgres', host='192.168.61.20', port='5433')
 	cursor = db.cursor()
 
@@ -1516,6 +1535,7 @@ def prb_num_distribution(request):
 
 
 def volume_7days(request):
+	"""返回7天内的容量预警信息"""
 	# index4 容量预警监控左下柱状图
 	db = psycopg2.connect(database='postgres', user='postgres', password='postgres', host='192.168.61.20', port='5433')
 	cursor = db.cursor()
